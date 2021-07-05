@@ -3,6 +3,8 @@ import * as core from "@actions/core";
 import listYarnWorkspaces from "./listYarnWorkspaces";
 import YarnGraph from "./YarnGraph";
 
+const subPackageRegex = /-(serverside|widgets|frontend)$/;
+
 const main = async (): Promise<void> => {
   try {
     const files: string[] = JSON.parse(
@@ -21,6 +23,13 @@ const main = async (): Promise<void> => {
     const targetWorkspaces = graph.getRecursiveDependents(...changedWorkspaces);
     core.endGroup();
     core.info(`Target workspaces [${targetWorkspaces.join(", ")}]`);
+
+    const normalizedWorkspaces = targetWorkspaces.map((ws) => {
+      if (!subPackageRegex.test(ws)) {
+        return ws;
+      }
+      return ws.replace(subPackageRegex, "");
+    });
 
     core.setOutput("targets", targetWorkspaces);
   } catch (err) {
